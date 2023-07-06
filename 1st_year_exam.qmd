@@ -1,0 +1,81 @@
+---
+title: "1st Year Bioinformatics Exam"
+author: "Jennifer Swindlehurst Chan"
+format: pdf
+editor: visual
+---
+---
+Name: Jennifer Swindlehurst Chan
+
+PID: 12415558
+
+## Covid Variant Data
+
+From the California Health and Human Services (CHHS) open data site.
+
+```{r}
+library(knitr)
+opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+```
+
+
+First. we load in all the packages we will use. I ended up not using lubridate.
+
+```{r message=FALSE}
+library(ggplot2)
+library(lubridate)
+library(dplyr)
+```
+
+Next, we upload the csv file with the data will be plotting. We can use the head() function to take a peak at what our data looks like.
+
+```{r}
+data <- read.csv("covid19_variants.csv")
+head(data)
+```
+
+Next, we can start to filter for what we want included. We only want the data relating to variants Alpha, Beta, Delta, Epsilon, Gamma, Lambda, Mu, and Omicron. We do not want Total or Other. This subsection of the data is now saved at data_2. We can also work with the date of each measurement easier by using the as.Date function. The example graph only plots until May 2022 so we can take our data_2 and section it out further to be the data from the beginning of the data set (January 1, 2021) until May 1, 2022. This is now saved as data_3. We can use the tail() function to check that the data is cut off at May 1, 2022.
+
+```{r tidy=TRUE}
+data$date <- as.Date(data$date)
+data_2 <- dplyr::filter(data, variant_name %in% c("Alpha", "Beta", "Delta","Epsilon", "Gamma", "Lambda", "Mu", "Omicron"))
+data_3 <- data_2[data_2$date >= "2021-01-01" & data_2$date <= "2022-05-01", ]
+
+head(data_2)
+tail(data_3)
+```
+
+Now we can plot. Below is what the original data looked like plotted. Here, we still have the Other and Total. The data is color coordinated based on variant name information. The percentage of the variant (y-axis) is plotted across time (x-axis). This is also a generally basic plot that needs some polishing.
+
+```{r tidy=TRUE}
+plot<- ggplot(data) +
+            aes(date, percentage, color=variant_name)+
+            geom_line()+
+            labs(title="Title")
+
+plot
+```
+
+This second plot is of data_2 which has gotten rid of Other and Total. I also added a title, a y-axis label, and got rid of the color legend label.
+
+```{r tidy=TRUE}
+plot<- ggplot(data_2) +
+            aes(date, percentage, color=variant_name)+
+            geom_line()+
+            labs(title="Covid-19 Variants in California", y="Percentage of Sequenced Specimens", color=NULL)
+
+plot
+```
+
+This third and final graph plots our data_3 which is just the variants we want to plot (from data_2) as well as cut off at a certain time (until May 2022). The graph is further polished to look like the example by having the bw theme. The x-axis has the month and year for each tick mark, labelled 1 month apart, with the labels set at a 45 degree angle and adjusted appropriately. 
+
+```{r tidy=TRUE}
+plot<- ggplot(data_3) +
+            aes(date, percentage, color=variant_name)+
+            geom_line()+
+            labs(title="Covid-19 Variants in California", y="Percentage of Sequenced Specimens", color=NULL)+
+            theme_bw()
+
+plot + theme(axis.text.x = element_text(angle=45, hjust = 1)) + scale_x_date(name=NULL, date_breaks="1 month", date_labels="%b %Y")
+
+```
